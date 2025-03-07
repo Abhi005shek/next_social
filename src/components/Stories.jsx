@@ -3,27 +3,33 @@ import { auth } from "@clerk/nextjs/server";
 import StoryList from "./StoryList";
 
 async function Stories() {
-  const { userId } = auth();
+  const { userId } = await auth();
   // if (!userId) return null;
+
+  let userStory = await prisma.story.findMany({
+    where: {
+      expiresAt: {
+        gt: new Date(),
+      },
+      userId: userId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   const stories = await prisma.story.findMany({
     where: {
       expiresAt: {
         gt: new Date(),
       },
-      OR: [
-        {
-          user: {
-            followers: {
-              some: {
-                folloerId: userId,
-              },
-            },
+      user: {
+        followers: {
+          some: {
+            followerId: userId,
           },
         },
-        {
-          userId: userId,
-        },
-      ],
+      },
     },
     include: {
       user: true,
@@ -33,7 +39,7 @@ async function Stories() {
   return (
     <div className="p-4 bg-white overflow-x-scroll text-xs shadow-md rounded scroll-hide">
       <div className="flex flex-row gap-6 w-max">
-        <StoryList userId={userId} stories={stories} />
+        <StoryList userId={userId} userStory={userStory[0]} stories={stories} />
       </div>
     </div>
   );

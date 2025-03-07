@@ -4,15 +4,17 @@ import { useUser } from "@clerk/nextjs";
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useOptimistic, useState } from "react";
 
-function StoryList({ stories, userId }) {
-  const { user, isLoaded, isSignedIn } = useUser();
+function StoryList({ userStory, stories, userId }) {
+  const { user, isSignedIn } = useUser();
   const [storyList, setStoryList] = useState(stories);
   const [img, setImg] = useState("");
   const [open, setOpne] = useState(false);
   const [openImg, setOpenImg] = useState(null);
-
+  const router = useRouter();
+  const [userstory, setUserstory] = useState(userStory);
   const [optimisticStoryList, setOptimisticStoryList] = useOptimistic(
     storyList,
     (state, value) => {
@@ -22,6 +24,7 @@ function StoryList({ stories, userId }) {
 
   const add = async () => {
     if (!img?.secure_url) return;
+    setUserstory(null);
     setOptimisticStoryList({
       id: Math.random(),
       img: img.secure_url,
@@ -52,7 +55,7 @@ function StoryList({ stories, userId }) {
     }
   };
 
-  if(!isSignedIn){
+  if (!isSignedIn) {
     return null;
   }
 
@@ -72,8 +75,8 @@ function StoryList({ stories, userId }) {
                 // src="https://cdn.pixabay.com/photo/2025/01/16/19/34/cortina-dampezzo-9338185_1280.jpg"
                 src={img?.secure_url || user?.imageUrl || "/noAvatar.png"}
                 alt=""
-                width={16}
-                height={16}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-full ring-2 object-cover"
                 onClick={() => open()}
               />
@@ -93,7 +96,25 @@ function StoryList({ stories, userId }) {
         }}
       </CldUploadWidget>
 
-      { optimisticStoryList.map((s) => (
+      {userstory && (
+        <div className="flex flex-col gap-2 items-center cursor-pointer">
+          <Image
+            // src="https://cdn.pixabay.com/photo/2025/01/16/19/34/cortina-dampezzo-9338185_1280.jpg"
+            src={userstory.img || "/noAvatar.png"}
+            alt=""
+            width={80}
+            height={80}
+            className="w-20 h-20 rounded-full object-cover ring-2"
+            onClick={() => {
+              setOpenImg(userstory?.img);
+              setOpne(true);
+            }}
+          />
+          <span className="font-medium">{user.username}</span>
+        </div>
+      )}
+
+      {optimisticStoryList.map((s) => (
         <div
           key={s.id}
           className="flex flex-col gap-2 items-center cursor-pointer"
@@ -102,9 +123,9 @@ function StoryList({ stories, userId }) {
             // src="https://cdn.pixabay.com/photo/2025/01/16/19/34/cortina-dampezzo-9338185_1280.jpg"
             src={s.img || "/noAvatar.png"}
             alt=""
-            width={16}
-            height={16}
-            className="w-20 h-20 rounded-full object-cover ring-2"
+            width={80}
+            height={80}
+            className=" w-20 h-20 rounded-full object-cover ring-2"
             onClick={() => {
               setOpenImg(s?.img);
               setOpne(true);
