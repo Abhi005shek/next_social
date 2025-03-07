@@ -4,8 +4,7 @@ import StoryList from "./StoryList";
 
 async function Stories() {
   const { userId } = await auth();
-  // if (!userId) return null;
-
+  if (!userId) return null;
   let userStory = await prisma.story.findMany({
     where: {
       expiresAt: {
